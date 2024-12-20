@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>제출하기</title>
+    <style>
+        @font-face {
+            font-family: 'UhBeeSe_hyun';
+            src: url('https://gcore.jsdelivr.net/gh/projectnoonnu/noonfonts_five@.2.0/UhBeeSe_hyun.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        html, body {
+            height: 100%; /* html과 body 높이를 100%로 설정 */
+            margin: 0; /* 기본 여백 제거 */
+            display: flex;
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center;
+        }
+
+        body {
+            background-image: url('background.png');
+            background-size: cover;
+        }
+
+        h1 {
+            font-family: 'UhBeeSe_hyun';
+            text-align: center;
+            display: none;
+            margin-top: 200px;
+        }
+
+        #game-area {
+            width: 100vw; /* 화면 전체 너비 사용 */
+            height: 100vh; /* 화면 전체 높이 사용 */
+            position: relative;
+            border: 2px solid #333;
+            overflow: hidden;
+            background-color: transparent; /* 배경색을 투명으로 설정 */
+            display: flex; /* 플렉스박스 사용 */
+            flex-direction: column;
+            align-items: center; /* 수평 중앙 정렬 */
+            justify-content: center; /* 수직 중앙 정렬 */
+        }
+
+        .obstacle {
+            width: 300px;
+            height: 300px;
+            background-image: url('errorimage.png'); /* 장애물에 이미지 추가 */
+            background-size: contain;
+            position: absolute;
+            border-radius: 10px;
+            transition: left 0.2s, top 0.2s; /* 이동 시 부드러운 애니메이션 */
+            background-repeat: no-repeat;
+        }
+
+        #submit-button {
+            font-family: 'UhBeeSe_hyun';
+            color: black; 
+            background-color: #b4a79e;
+            padding: 10px; 
+            text-align: center; 
+            font-size: 20px; 
+            cursor: pointer; 
+            border-radius: 5px;
+            margin-top: 30px;
+            border: 3px solid #3f352c;  
+            transition: background-color 0.3s, transform 0.2s; /* 크기 변화 애니메이션 추가 */
+            display: none; /* 기본적으로 숨김 */
+            z-index: 10; /* 버튼을 최상위에 표시 */
+        }       
+
+        #cursor {
+            position: absolute;
+            width: 200px; 
+            height: 200px; 
+            background: url('mousepointer.png') no-repeat center center; /* 원하는 이미지로 설정 */
+            background-size: contain; /* 이미지 크기 조정 */
+            transform: translate(-50%, -50%); /* 중앙 정렬 */
+            animation: rotate 2s infinite linear; /* 회전 애니메이션 추가 */
+        }
+
+        @keyframes rotate {
+            from {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+    </style>
+</head>
+<body>
+<div id="game-area">
+    <div id="cursor"></div>
+    <h1><p>오류를 다 제거했다!</p>
+      <p>버튼을 눌러 제출하자</p></h1>
+    <button id="submit-button">제출하기</button>
+</div>
+<script>
+    const gameArea = document.getElementById("game-area");
+    const submitButton = document.getElementById("submit-button");
+    const message = document.querySelector("h1");
+    const obstacleCount = 10;
+    let removedObstacles = 0;
+    let isDragging = false; // 드래그 상태를 추적
+    let currentObstacle = null; // 현재 드래그 중인 장애물
+
+    // 장애물 생성 및 초기 위치 설정
+    function createObstacles() {
+        for (let i = 0; i < obstacleCount; i++) {
+            const obstacle = document.createElement("div");
+            obstacle.classList.add("obstacle");
+            obstacle.style.left = `${Math.random() * (gameArea.clientWidth - 300)}px`;
+            obstacle.style.top = `${Math.random() * (gameArea.clientHeight - 300)}px`;
+
+            // 마우스 이벤트 추가
+            obstacle.addEventListener("mousedown", () => {
+                isDragging = true; // 드래그 시작
+                currentObstacle = obstacle; // 현재 드래그 중인 장애물 설정
+            });
+
+            gameArea.appendChild(obstacle);
+        }
+    }
+
+    // 장애물 이동 함수
+    function handleMouseMove(event) {
+        if (isDragging && currentObstacle) {
+            const mouseX = event.clientX - gameArea.getBoundingClientRect().left;
+            const mouseY = event.clientY - gameArea.getBoundingClientRect().top;
+
+            // 장애물의 새로운 위치 계산
+            let newX = mouseX - (currentObstacle.clientWidth / 2);
+            let newY = mouseY - (currentObstacle.clientHeight / 2);
+
+            // 새로운 위치로 이동
+            currentObstacle.style.left = `${newX}px`;
+            currentObstacle.style.top = `${newY}px`;
+        }
+    }
+
+    // 마우스 버튼을 뗐을 때 드래그 상태 종료
+    document.addEventListener("mouseup", () => {
+        if (isDragging && currentObstacle) {
+            const obstacleRect = currentObstacle.getBoundingClientRect();
+            const gameAreaRect = gameArea.getBoundingClientRect();
+
+            // 장애물이 게임 영역 밖으로 나갔는지 확인
+            if (
+                obstacleRect.top < gameAreaRect.top ||
+                obstacleRect.bottom > gameAreaRect.bottom ||
+                obstacleRect.left < gameAreaRect.left ||
+                obstacleRect.right > gameAreaRect.right
+            ) {
+                currentObstacle.remove(); // 장애물 제거
+                removedObstacles++;
+                checkGameClear();
+            }
+
+            isDragging = false; // 드래그 종료
+            currentObstacle = null; // 현재 드래그 중인 장애물 초기화
+        }
+    });
+
+    // 마우스 이동 이벤트 추가
+    gameArea.addEventListener("mousemove", handleMouseMove);
+
+    // 게임 클리어 체크
+    function checkGameClear() {
+        if (removedObstacles === obstacleCount) {
+            message.style.display = 'block'; // 모든 장애물을 제거하면 메시지 표시
+            submitButton.style.display = 'block'; // 버튼 표시
+        }
+    }
+
+    // 버튼 클릭 시 행동
+    submitButton.addEventListener("click", () => {
+        alert("와아!!! 과제를 제출했다!");
+    });
+
+    // 게임 시작
+    createObstacles();
+    
+    // 커서
+    const cursor = document.getElementById('cursor'); 
+    window.onmousemove = function(e) {
+        cursor.style.left = e.clientX + "px"; // 마우스 X좌표에 맞게 이동
+        cursor.style.top = e.clientY + "px"; // 마우스 Y좌표에 맞게 이동
+    }
+</script>
+</body>
+</html>

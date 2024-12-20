@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>시간도둑을 피해라</title>
+    <style type="text/css">
+        @font-face {
+            font-family: 'UhBeeSe_hyun';
+            src: url('https://gcore.jsdelivr.net/gh/projectnoonnu/noonfonts_five@.2.0/UhBeeSe_hyun.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            background-image: url('background.png');
+            background-size: cover;
+            height: 100vh; 
+            margin: 0; 
+            display: flex;
+            flex-direction: column; 
+            align-items: center; 
+        }
+
+        h1,h2 {
+            font-family: 'UhBeeSe_hyun';
+            color: black;
+            margin-top: 30px;
+            font-size: 20px;
+        }
+
+        #game-area {
+            width: 1400px;
+            height: 600px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #3f352c;
+            margin-top: 20px;
+        }
+
+        .mon {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+        
+        #rect {
+            background-image: url('walkingone.png');
+            background-size:contain;
+            z-index: 99;
+            width: 150px;
+            height: 150px;
+            position: absolute;
+            background-repeat: no-repeat;
+        }
+
+        #treasure {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background-image: url('object.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        .timer {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-family: 'UhBeeSe_hyun';
+            font-size: 20px;
+            color: #3f352c;
+        }
+
+        .wall {
+            position: absolute;
+            width: 30px;
+            height: 300px;
+            background-color: #b4a79e;
+            border: 2px solid #3f352c; 
+        }
+    </style>
+</head>
+<body>
+    <h1>시간 도둑을 피해 60초내에 책상까지 가보자.</h1>
+    <h2>시간 도둑에 닿으면 10초씩 사라져요</h2>
+    <div id="game-area">
+        <div id="rect"></div>
+        <div class="timer" id="timer">40</div>
+        <div class="wall" id="wall1"></div>
+        <div class="wall" id="wall2"></div>
+        <div class="wall" id="wall3"></div>
+        <div class="wall" id="wall4"></div>
+    </div>
+
+    <script type="text/javascript">
+        let xplot = 100, yplot = 100;
+        const rect = document.getElementById('rect');
+        rect.style.left = xplot + "px";
+        rect.style.top = yplot + "px";
+
+        let collisionCount = 0; // 충돌 후 이동 횟수를 세는 전역 변수
+        let timeLeft = 40;
+        const timerElement = document.getElementById("timer");
+
+        const walls = [
+            { id: 'wall1', x: 350, y: 0 },
+            { id: 'wall2', x: 550, y: 300 },
+            { id: 'wall3', x: 750, y: 0 },
+            { id: 'wall4', x: 1000, y: 300 }
+        ];
+
+        walls.forEach(wall => {
+            const wallElement = document.getElementById(wall.id);
+            wallElement.style.left = wall.x + "px";
+            wallElement.style.top = wall.y + "px";
+        });
+
+        let monPosition = [];
+        
+        const monsterPositions = [
+            [200, 400],
+            [400, 100],
+            [600, 400],
+            [800, 80]
+        ];
+
+        const monsterImages = [
+            'monster1.png',
+            'monster2.png',
+            'monster3.png',
+            'monster4.png',
+        ];
+
+        for (let i = 0; i < monsterPositions.length; i++) {
+            createMon(i);
+        }
+
+        function createMon(i) {
+            let monster = document.createElement("div");
+            monster.className = "mon";
+            monster.id = "mon" + i;
+            monster.style.backgroundImage = `url(${monsterImages[i % monsterImages.length]})`;
+            let mX = monsterPositions[i][0]; 
+            let mY = monsterPositions[i][1];
+            monPosition.push([mX, mY, monster.id]);
+            monster.style.left = mX + "px";
+            monster.style.top = mY + "px";
+            document.getElementById('game-area').appendChild(monster);
+        }
+
+        const treasure = document.createElement("div");
+        treasure.id = "treasure";
+        document.getElementById('game-area').appendChild(treasure);
+
+        const treasureX = 1050;
+        const treasureY = 300;
+        treasure.style.left = treasureX + "px";
+        treasure.style.top = treasureY + "px";
+
+        function updateTimer() {
+            timeLeft--;
+            timerElement.textContent = timeLeft;
+            if (timeLeft <= 0) {
+                gameOver();
+            }
+        }
+
+        setInterval(updateTimer, 1000);
+
+        function gameOver() {
+            alert("과제 제출을 못했어...");
+            window.location.href = "index4.html";
+        }
+
+        function gameClear() {
+            alert("책상에 앉았다!");
+            window.location.href = "index5.html";
+        }
+
+        window.onkeydown = function(e) {
+            let newXplot = xplot;
+            let newYplot = yplot;
+
+            if (e.keyCode == 37) newXplot -= 100;
+            else if (e.keyCode == 39) newXplot += 100;
+            else if (e.keyCode == 38) newYplot -= 100;
+            else if (e.keyCode == 40) newYplot += 100;
+
+            const gameArea = document.getElementById('game-area');
+            if (newXplot >= 0 && newXplot <= gameArea.offsetWidth - 200 &&
+                newYplot >= 0 && newYplot <= gameArea.offsetHeight - 200) {
+                xplot = newXplot;
+                yplot = newYplot;
+                rect.style.left = xplot + "px";
+                rect.style.top = yplot + "px";
+            }
+
+            for (let i = 0; i < monPosition.length; i++) {
+                const deltaX = Math.abs(xplot - monPosition[i][0]);
+                const deltaY = Math.abs(yplot - monPosition[i][1]);
+
+                if (deltaX <= 30 && deltaY <= 30) {
+                    let monsterElement = document.querySelector("#mon" + i);
+                    if (monsterElement) monsterElement.remove();
+                    switch (i) {
+                        case 0:
+                            rect.style.backgroundImage = "url('monster1re.png')";
+                            break;
+                        case 1:
+                            rect.style.backgroundImage = "url('monster2re.png')";
+                            break;
+                        case 2:
+                            rect.style.backgroundImage = "url('monster3re.png')";
+                            break;
+                        case 3:
+                            rect.style.backgroundImage = "url('monster4re.png')";
+                            break;
+                    }
+                    collisionCount = 3;
+                    timeLeft -= 10;
+                    if (timeLeft <= 0) gameOver();
+                }
+            }
+
+            if (xplot >= treasureX && xplot <= treasureX + 200 && yplot >= treasureY && yplot <= treasureY + 200) {
+                gameClear();
+            }
+
+            if (collisionCount > 0) {
+                collisionCount--;
+                if (collisionCount === 0) rect.style.backgroundImage = "url('walkingone.png')";
+            }
+        };
+    </script>
+</body>
+</html>
